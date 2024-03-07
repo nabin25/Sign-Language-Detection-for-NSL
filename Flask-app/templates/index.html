@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Sign Prediction</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        label {
+            cursor: pointer;
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        #previewImage {
+            max-width: 400px; /* Set fixed width */
+            max-height: 300px; /* Set fixed height */
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #27ae60;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        p#result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hand Sign Prediction</h1>
+    <label for="uploadInput">Choose an Image</label>
+    <input type="file" accept="image/*" capture="camera" id="uploadInput">
+    
+    <!-- Display the preview image immediately after selection -->
+    <img src="E:\major-project\Flask-app\templates\images\placeholder.png" id="previewImage" alt="Preview Image">
+    
+    <!-- Add buttons for choosing models -->
+    <button onclick="predict('c')">Predict using Model C</button>
+    <button onclick="predict('v')">Predict using Model V</button>
+
+    <p id="result"></p>
+
+    <script>
+        function updatePreview() {
+            var fileInput = document.getElementById('uploadInput');
+            var previewImage = document.getElementById('previewImage');
+            
+            var file = fileInput.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // Reset to the placeholder image if no file is selected
+                previewImage.src = "E:\major-project\Flask-app\templates\images\placeholder.png";
+            }
+        }
+
+        function predict(modelType) {
+            var fileInput = document.getElementById('uploadInput');
+            var resultElement = document.getElementById('result');
+
+            var file = fileInput.files[0];
+            if (file) {
+                var formData = new FormData();
+                formData.append('image', file);
+                formData.append('model', modelType);  // Include the model type
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if ('class' in data) {
+                        resultElement.innerHTML = 'Predicted class: ' + data.class;
+                    } else if ('error' in data) {
+                        resultElement.innerHTML = 'Error: ' + data.error;
+                    }
+                })
+                .catch(error => {
+                    resultElement.innerHTML = 'Error: ' + error;
+                });
+            } else {
+                resultElement.innerHTML = 'Please select an image.';
+            }
+        }
+
+        // Attach the updatePreview function to the change event of the file input
+        document.getElementById('uploadInput').addEventListener('change', updatePreview);
+    </script>
+</body>
+</html>
